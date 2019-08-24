@@ -66,6 +66,49 @@ def RCRP(cov, use_extended_terms=True, a=None):
         w = getIVPNew(cov, use_extended_terms=use_extended_terms, a=a.values)
     return w
 #------------------------------------------------------------------------------
+def Int2Bin(n,L):
+    # input: positive integer n < 2**L, positive integer L
+    # output: string for n in base 2 of length L
+    x = "{0:b}".format(n)
+    return '0' * (L-len(x)) + x 
+#------------------------------------------------------------------------------
+def Bin2Vector(x):
+    # input: binary string x of length N, e.g. 01001
+    # output: N vector v, e.g. np.asarray([-1 1 -1 -1 1])
+    return np.asarray([2*int(b)-1 for b in x])
+#------------------------------------------------------------------------------
+def FindMinPermutation(invSigma):
+    # Input: N vector containing 1/sigma > 0
+    # output: N vector a s.t. sum( a * invSigma ) is minimized
+    N = len(invSigma)
+    maxN = 12
+    a, minSum = None, np.inf
+    if N <= maxN + 1:
+        # N is small enough, just do the optimal value
+        # NOTE: We don't need to check all 2^N possibilities; the sum for n2 = 2**N - 1 - n will have -sum of n
+        for n in xrange(2**(N-1)):
+            v = Bin2Vector(Int2Bin(n,N))
+            s = abs(sum(v * invSigma))
+            if s < minSum:
+                a, minSum = v, s        
+    else:
+        # N is sufficiently large, find an approximate solution
+        X = pd.Series( np.copy(invSigma), index=range(N) )
+        for _ in xrange(2**maxN):
+            tmp = X.sample(frac=1)
+            s = tmp.iloc[0]
+            b = '1'
+            for i in xrange(1,len(tmp)):
+                if s > 0:
+                    s -= tmp.iloc[i]
+                    b += '0'
+                else:
+                    s += tmp.iloc[i]
+                    b += '1'
+            if abs(s) < minSum:
+                minSum, a = abs(s), Bin2Vector( ''.join( [b[i] for i in tmp.index.argsort()] ) )
+    return a
+#------------------------------------------------------------------------------
 # Modified HRP
 #------------------------------------------------------------------------------
 def getClusterStats(cov, cItems, use_extended_terms=False, returns=None):
