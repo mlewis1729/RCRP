@@ -35,7 +35,7 @@ def getIVPNew(cov, use_extended_terms=False, a=None, limit_shorts=False):
         ivp-=rho*invSigma*np.sum(invSigma*a)/(1.+(n-1)*rho)
     if limit_shorts:
         # condition: sum(|w|) = 1
-        return ivp / ivp.abs().sum()
+        return ivp / abs(ivp).sum()
     else:
         # condition: sum(w) = 1
         return ivp / ivp.sum()
