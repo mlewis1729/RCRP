@@ -7,38 +7,45 @@ import clusterCorr as cC
 #------------------------------------------------------------------------------
 def compressCov(cov, a, clusters, w):
     # Takes a covariance matrix and reduces the it to the basis vectors made by the weights from the clusters
-    # Similarly, reduces the vector a (e.g. 1s, or expected returns), and reduces by the cluster weights
+    # Similarly, reduces the vector a (e.g. None, or expected returns), and reduces by the cluster weights
     wM = pd.DataFrame(0., index=clusters.keys(), columns=cov.index )
     for i in np.sort( clusters.keys() ):
         wM.loc[i, clusters[i] ] = w[clusters[i]]
-    a_clustered = wM.dot( a )
+    a_clustered = None if a is None else wM.dot( a )
     cov_clustered = wM.dot(cov).dot(wM.T)
     return cov_clustered, a_clustered
 #------------------------------------------------------------------------------
-def getIVPNew(cov, use_extended_terms=False, a=None):
+def getIVPNew(cov, use_extended_terms=False, a=None, limit_shorts=False):
     # Compute the inverse variance portfolio via approximation of the covariance matrix
+    n = int(cov.shape[0])
+    corr = cC.cov2corr(cov)
+    invSigma = 1./np.sqrt(np.diag(cov))
     if a is None:
-        # If a is None, we're doing min variance => a = 1
-        # If a is not None, we're doing max sharpe => a = mu
-        a = np.ones(cov.shape[0])
-    ivp = a / np.diag(cov)
-    if use_extended_terms and cov.shape[0] > 1:
-        n=float(cov.shape[0])
-        corr=cC.cov2corr(cov)
+        # If a is None, we're finding the min variance portfolio
+        # If a is not None, we're finding the max sharpe portfolio => a = mu
+        if limit_shorts and n > 1 and np.sum(np.sum(corr)) >= n:
+            # if average correlation is >= 0 and limiting shorts ( sum(|w|) = 1 )
+            a = FindMinPermutation(invSigma)
+        else:
+            a = np.ones(n)
+    ivp = a * (invSigma ** 2)
+    if use_extended_terms and n > 1:
         # Obtain average off-diagonal correlation
         rho=(np.sum(np.sum(corr))-n)/(n**2-n)
-        #invSigma=np.sqrt(ivp)
-        invSigma=1./np.sqrt(np.diag(cov))
         ivp-=rho*invSigma*np.sum(invSigma*a)/(1.+(n-1)*rho)
-    ivp/=ivp.sum()
-    return ivp
+    if limit_shorts:
+        # condition: sum(|w|) = 1
+        return ivp / ivp.abs().sum()
+    else:
+        # condition: sum(w) = 1
+        return ivp / ivp.sum()
 #------------------------------------------------------------------------------
-def RCRP(cov, use_extended_terms=True, a=None):
+def RCRP(cov, use_extended_terms=True, a=None, limit_shorts=False):
     # Create a risk balance portfolio by recursively clustering the correlation matrix,
     # using the inverse variance portfolio at the lowest levels, then utilizing the optimal weights at lower levels
     # to compress the covariance matrix, and evaluating the optimal inverse variance portfolio on the compressed covariance matrix
-    if a is None:
-        a = pd.Series( 1., index = cov.index )
+    # a = None => min variance portfolio, otherwise a = Expected returns
+
     # default assume use extended terms
     w = pd.Series( 1., index = cov.index )
 
@@ -48,14 +55,23 @@ def RCRP(cov, use_extended_terms=True, a=None):
         for clusterId in clusters.keys():
             lbls = clusters[clusterId]
             if len(lbls) > 2:
-                w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, a=a[lbls])
+                if a is None:
+                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+                else:
+                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a[lbls])
             else:
-                w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, a=a[lbls].values)
+                if a is None:
+                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+                else:
+                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a[lbls].values)
         # compress the covariance matrix (and vector a) using the optimal weights from lower levels
         cov_compressed, a_compressed = compressCov(cov, a, clusters, w)
 
         # evaluate the inverse variance portfolio on the clustered porfolio
-        w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, a=a_compressed.values)
+        if a is None:
+            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+        else:
+            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a_compressed.values)
 
         # update the weights using the optimal cluster weights
         for clusterId in clusters.keys():
@@ -63,7 +79,10 @@ def RCRP(cov, use_extended_terms=True, a=None):
             w[lbls] *= w_clusters[clusterId]
     else:
         # Only has one cluster
-        w = getIVPNew(cov, use_extended_terms=use_extended_terms, a=a.values)
+        if a is None:
+            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+        else:
+            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a.values)
     return w
 #------------------------------------------------------------------------------
 def Int2Bin(n,L):
