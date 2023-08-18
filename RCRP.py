@@ -9,7 +9,8 @@ def compressCov(cov, a, clusters, w):
     # Takes a covariance matrix and reduces the it to the basis vectors made by the weights from the clusters
     # Similarly, reduces the vector a (e.g. None, or expected returns), and reduces by the cluster weights
     wM = pd.DataFrame(0., index=clusters.keys(), columns=cov.index )
-    for i in np.sort( clusters.keys() ):
+    #print(clusters)
+    for i in np.sort( list( clusters.keys() ) ):
         wM.loc[i, clusters[i] ] = w[clusters[i]]
     a_clustered = None if a is None else wM.dot( a )
     cov_clustered = wM.dot(cov).dot(wM.T)
@@ -183,4 +184,87 @@ def getRecBipartNew(cov, sortIx, use_extended_terms1=False, use_extended_terms2=
             w[cItems0]*=alpha # weight 1
             w[cItems1]*=1-alpha # weight 2
     return w
+#------------------------------------------------------------------------------
+# Build Class struct to hold B-Tree Structure, so structure can be re-used for different vectors
+class Cov_Tree:
+    def __init__( self, cluster_id = 0 ):
+        self.cluster_id = cluster_id
+        self.cluster_family_map = {}
+        self.cluster_type_map = {}
+        self.cov = None
+        
+    def __del__( self ):
+        self.cluster_id = 0
+        self.cluster_family_map = {}
+        self.cluster_type_map = {}
+        self.cov = None
+        
+    def fit( self, cov ):
+        # cluster the correlation matrix
+        _, clusters, _ = cC.clusterKMeansTop(cC.cov2corr( cov ))
+        main_id = self.cluster_id
+        if len( clusters ) > 1:
+            this_id = main_id + 1
+            cluster_set = []
+            for clusterId in clusters.keys():
+                lbls = clusters[clusterId]
+                cluster_set.append( this_id )
+                if len(lbls) > 2:
+                    Sub_Tree = Cov_Tree( cluster_id = this_id )
+                    Sub_Tree.fit( cov.loc[ lbls, lbls ] )
+                    for idx, lbls1 in Sub_Tree.cluster_family_map.items():
+                        self.cluster_family_map[ idx ] = lbls1
+                        self.cluster_type_map[ idx ] = Sub_Tree.cluster_type_map[ idx ]
+                    this_id += len( Sub_Tree.cluster_family_map )
+                    del Sub_Tree
+                else:
+                    # small emough to be a leaf
+                    self.cluster_family_map[ this_id ] = lbls
+                    self.cluster_type_map[ this_id ] = 'LEAF'
+                    this_id += 1                  
+            self.cluster_family_map[ main_id ] = cluster_set
+            self.cluster_type_map[ main_id ] = 'NODE'
+        else:
+            clusterId = clusters.keys()[0]
+            lbls = clusters[ clusterId ]
+            self.cluster_family_map[ main_id ] = lbls
+            self.cluster_type_map[ main_id ] = 'LEAF'
+        self.cov = cov        
+        return self
+    
+    def solve( self, b, use_extended_terms = True, limit_shorts = False ):
+        # solve C x = b
+        
+        def recursive_solve( idx ):
+            cluster_type = self.cluster_type_map[ idx ]
+            lbls         = self.cluster_family_map[ idx ]
+            if cluster_type == 'LEAF':
+                sub_cov = self.cov.loc[ lbls, lbls ]
+                sub_b   = b.loc[ lbls ]
+                w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=sub_b.values)
+                w = pd.Series( w, index = lbls )
+                return w
+            else:
+                w = []
+                clustering = {}
+                for lbl in lbls:
+                    sub_w = recursive_solve( lbl )
+                    w.append( sub_w )
+                    clustering[ lbl ] = sub_w.index
+                w = pd.concat( w )
+                # compress the covariance matrix (and vector b) using the optimal weights from lower levels
+                cov1 = self.cov.loc[ w.index, w.index ]
+                b1 = b.loc[ w.index ]
+                cov_compressed, b_compressed = compressCov( cov1, b1, clustering, w )
+
+                # evaluate the inverse variance portfolio on the clustered porfolio
+                w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=b_compressed.values)
+                w_clusters = pd.Series( w_clusters, index = cov_compressed.index )
+                # update the weights using the optimal cluster weights
+                for clusterId in clustering.keys():
+                    lbls = clustering[clusterId]
+                    w[lbls] *= w_clusters[clusterId]
+                return w
+            
+        return recursive_solve( self.cluster_id )
 #------------------------------------------------------------------------------
