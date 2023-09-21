@@ -38,9 +38,9 @@ def getRecBipart(cov,sortIx):
     w=pd.Series(1,index=sortIx)
     cItems=[sortIx] # initialize all items in one cluster
     while len(cItems)>0:
-        cItems=[i[j:k] for i in cItems for j,k in ((0,len(i)/2), \
-            (len(i)/2,len(i))) if len(i)>1] # bi-section
-        for i in xrange(0,len(cItems),2): # parse in pairs
+        cItems=[i[j:k] for i in cItems for j,k in ((0,len(i)//2), \
+            (len(i)//2,len(i))) if len(i)>1] # bi-section
+        for i in range(0,len(cItems),2): # parse in pairs
             cItems0=cItems[i] # cluster 1
             cItems1=cItems[i+1] # cluster 2
             cVar0=getClusterVar(cov,cItems0)
@@ -73,7 +73,7 @@ def generateData(nObs,size0,size1,sigma1):
     np.random.seed(seed=12345);random.seed(12345)
     x=np.random.normal(0,1,size=(nObs,size0)) # each row is a variable
     #2) creating correlation between the variables
-    cols=[random.randint(0,size0-1) for i in xrange(size1)]
+    cols=[random.randint(0,size0-1) for i in range(size1)]
     y=x[:,cols]+np.random.normal(0,sigma1,size=(nObs,len(cols)))
     x=np.append(x,y,axis=1)
     x=pd.DataFrame(x,columns=range(1,x.shape[1]+1))
@@ -83,7 +83,7 @@ def main():
     #1) Generate correlated data
     nObs,size0,size1,sigma1=10000,5,5,.25
     x,cols=generateData(nObs,size0,size1,sigma1)
-    print [(j+1,size0+i) for i,j in enumerate(cols,1)]
+    print( [(j+1,size0+i) for i,j in enumerate(cols,1)] )
     #2) compute and plot correl matrix
     cov,corr=x.cov(),x.corr()
     plotCorrMatrix('HRP3_corr0.png',corr,labels=corr.columns)
@@ -96,7 +96,7 @@ def main():
     plotCorrMatrix('HRP3_corr1.png',df0,labels=df0.columns)
     #4) Capital allocation
     hrp=getRecBipart(cov,sortIx)
-    print hrp
+    print(hrp)
     return
 #------------------------------------------------------------------------------
 if __name__=='__main__':main()
