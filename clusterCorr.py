@@ -12,8 +12,8 @@ def clusterKMeansBase(corr0,maxNumClusters=10,n_init=10):
     from sklearn.metrics import silhouette_samples
     dist,silh=((1-corr0.fillna(0))/2.)**.5,pd.Series() # distance matrix
     for init in range(n_init):
-        for i in xrange(2,maxNumClusters+1): # find optimal num clusters
-            kmeans_=KMeans(n_clusters=i,n_jobs=1,n_init=1)
+        for i in range(2,maxNumClusters+1): # find optimal num clusters
+            kmeans_=KMeans(n_clusters=i,n_init=1)
             kmeans_=kmeans_.fit(dist)
             silh_=silhouette_samples(dist,kmeans_.labels_)
             stat=(silh_.mean()/silh_.std(),silh.mean()/silh.std())
@@ -45,7 +45,7 @@ def makeNewOutputs(corr0,clstrs,clstrs2):
     silhNew=pd.Series(silhouette_samples(dist,kmeans_labels),index=dist.index)
     return corrNew,clstrsNew,silhNew
 #------------------------------------------------------------------------------
-def clusterKMeansTop(corr0,maxNumClusters=10,n_init=10):
+def clusterKMeansTop_orig(corr0,maxNumClusters=10,n_init=10):
     corr1,clstrs,silh=clusterKMeansBase(corr0,maxNumClusters=min(corr0.shape[1]-1,maxNumClusters),n_init=n_init)
     clusterTstats={i:np.mean(silh[ clstrs[i]])/np.std(silh[clstrs[i]]) for i in clstrs.keys()}
     tStatMean=np.mean(clusterTstats.values())
@@ -66,6 +66,30 @@ def clusterKMeansTop(corr0,maxNumClusters=10,n_init=10):
         if newTstatMean<=meanRedoTstat:
             return corr1,clstrs,silh
         else:
+            return corrNew,clstrsNew,silhNew
+#------------------------------------------------------------------------------
+def clusterKMeansTop(corr0,maxNumClusters=10,n_init=10):
+    corr1,clstrs,silh=clusterKMeansBase(corr0,maxNumClusters=min(corr0.shape[1]-1,maxNumClusters),n_init=n_init)
+    #print(clstrs)
+    clusterTstats={i:np.mean(silh[ clstrs[i]])/np.std(silh[clstrs[i]]) for i in clstrs.keys()}
+    tStatMean=np.mean( list( clusterTstats.values() ) )
+    tStatMax=np.max( list( clusterTstats.values() ) )
+    redoClusters=[i for i in clusterTstats.keys() if clusterTstats[i]<tStatMax]
+    keysRedo=[];map(keysRedo.extend,[clstrs[i] for i in redoClusters])
+    corrTmp=corr0.loc[keysRedo,keysRedo]
+    medianRedoTstat=np.median([clusterTstats[i] for i in redoClusters])
+    if corrTmp.shape[1]<=4:
+        return corr1,clstrs,silh
+    corr2,clstrs2,silh2=clusterKMeansTop(corrTmp, \
+            maxNumClusters=maxNumClusters,n_init=n_init)
+    # Make new outputs, if necessary
+    corrNew,clstrsNew,silhNew=makeNewOutputs(corr0, \
+            {i:clstrs[i] for i in clstrs.keys() if i not in redoClusters}, clstrs2 )
+    newTstatMedian=np.median([np.mean(silhNew[clstrs2[i]])/np.std(silhNew[clstrs2[i]]) \
+            for i in clstrs2.keys()])
+    if newTstatMedian<=medianRedoTstat:
+            return corr1,clstrs,silh
+    else:
             return corrNew,clstrsNew,silhNew
 #------------------------------------------------------------------------------
 def clusterKMeansTopMax(corr0,maxNumClusters=10,n_init=10):
