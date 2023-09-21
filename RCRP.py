@@ -5,35 +5,35 @@ import clusterCorr as cC
 #------------------------------------------------------------------------------
 # Recursively Clustered Risk Parity (RCRP)
 #------------------------------------------------------------------------------
-def compressCov(cov, a, clusters, w):
+def compressCov(cov, b, clusters, w):
     # Takes a covariance matrix and reduces the it to the basis vectors made by the weights from the clusters
-    # Similarly, reduces the vector a (e.g. None, or expected returns), and reduces by the cluster weights
+    # Similarly, reduces the vector b (e.g. None, or expected returns), and reduces by the cluster weights
     wM = pd.DataFrame(0., index=clusters.keys(), columns=cov.index )
     #print(clusters)
     for i in np.sort( list( clusters.keys() ) ):
         wM.loc[i, clusters[i] ] = w[clusters[i]]
-    a_clustered = None if a is None else wM.dot( a )
+    b_clustered = None if b is None else wM.dot( b )
     cov_clustered = wM.dot(cov).dot(wM.T)
-    return cov_clustered, a_clustered
+    return cov_clustered, b_clustered
 #------------------------------------------------------------------------------
-def getIVPNew(cov, use_extended_terms=False, a=None, limit_shorts=False):
+def getIVPNew(cov, use_extended_terms=False, b=None, limit_shorts=False):
     # Compute the inverse variance portfolio via approximation of the covariance matrix
     n = int(cov.shape[0])
     corr = cC.cov2corr(cov)
     invSigma = 1./np.sqrt(np.diag(cov))
-    if a is None:
-        # If a is None, we're finding the min variance portfolio
-        # If a is not None, we're finding the max sharpe portfolio => a = mu
+    if b is None:
+        # If b is None, we're finding the min variance portfolio
+        # If b is not None, we're finding the max sharpe portfolio => b = mu
         if limit_shorts and n > 1 and np.sum(np.sum(corr)) >= n:
             # if average correlation is >= 0 and limiting shorts ( sum(|w|) = 1 )
-            a = FindMinPermutation(invSigma)
+            b = FindMinPermutation(invSigma)
         else:
-            a = np.ones(n)
-    ivp = a * (invSigma ** 2)
+            b = np.ones(n)
+    ivp = b * (invSigma ** 2)
     if use_extended_terms and n > 1:
         # Obtain average off-diagonal correlation
         rho=(np.sum(np.sum(corr))-n)/(n**2-n)
-        ivp-=rho*invSigma*np.sum(invSigma*a)/(1.+(n-1)*rho)
+        ivp-=rho*invSigma*np.sum(invSigma*b)/(1.+(n-1)*rho)
     if limit_shorts:
         # condition: sum(|w|) = 1
         return ivp / abs(ivp).sum()
@@ -41,11 +41,11 @@ def getIVPNew(cov, use_extended_terms=False, a=None, limit_shorts=False):
         # condition: sum(w) = 1
         return ivp / ivp.sum()
 #------------------------------------------------------------------------------
-def RCRP(cov, use_extended_terms=True, a=None, limit_shorts=False):
+def RCRP(cov, use_extended_terms=True, b=None, limit_shorts=False):
     # Create a risk balance portfolio by recursively clustering the correlation matrix,
     # using the inverse variance portfolio at the lowest levels, then utilizing the optimal weights at lower levels
     # to compress the covariance matrix, and evaluating the optimal inverse variance portfolio on the compressed covariance matrix
-    # a = None => min variance portfolio, otherwise a = Expected returns
+    # b = None => min variance portfolio, otherwise b = Expected returns
 
     # default assume use extended terms
     w = pd.Series( 1., index = cov.index )
@@ -56,23 +56,23 @@ def RCRP(cov, use_extended_terms=True, a=None, limit_shorts=False):
         for clusterId in clusters.keys():
             lbls = clusters[clusterId]
             if len(lbls) > 2:
-                if a is None:
-                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+                if b is None:
+                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
                 else:
-                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a[lbls])
+                    w[lbls] = RCRP(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b[lbls])
             else:
-                if a is None:
-                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+                if b is None:
+                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
                 else:
-                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a[lbls].values)
-        # compress the covariance matrix (and vector a) using the optimal weights from lower levels
-        cov_compressed, a_compressed = compressCov(cov, a, clusters, w)
+                    w[lbls] = getIVPNew(cov.loc[lbls, lbls], use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b[lbls].values)
+        # compress the covariance matrix (and vector b) using the optimal weights from lower levels
+        cov_compressed, b_compressed = compressCov(cov, b, clusters, w)
 
         # evaluate the inverse variance portfolio on the clustered porfolio
-        if a is None:
-            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+        if b is None:
+            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
         else:
-            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a_compressed.values)
+            w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b_compressed.values)
 
         # update the weights using the optimal cluster weights
         for clusterId in clusters.keys():
@@ -80,10 +80,10 @@ def RCRP(cov, use_extended_terms=True, a=None, limit_shorts=False):
             w[lbls] *= w_clusters[clusterId]
     else:
         # Only has one cluster
-        if a is None:
-            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=None)
+        if b is None:
+            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
         else:
-            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=a.values)
+            w = getIVPNew(cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b.values)
     return w
 #------------------------------------------------------------------------------
 def Int2Bin(n,L):
@@ -128,62 +128,6 @@ def FindMinPermutation(invSigma):
             if abs(s) < minSum:
                 minSum, a = abs(s), Bin2Vector( ''.join( [b[i] for i in tmp.index.argsort()] ) )
     return a
-#------------------------------------------------------------------------------
-# Modified HRP
-#------------------------------------------------------------------------------
-def getClusterStats(cov, cItems, use_extended_terms=False, returns=None):
-    # Compute variance per cluster
-    cov_=cov.loc[cItems,cItems] # matrix slice
-    if returns is None:
-        w_=getIVPNew(cov_, use_extended_terms=use_extended_terms, a=None).reshape(-1,1)
-        cVar=np.dot(np.dot(w_.T,cov_),w_)[0,0]
-        return cVar, 1.
-    else:
-        mu_=returns[cItems].values.reshape(-1,1)
-        w_=getIVPNew(cov_, use_extended_terms=use_extended_terms, a=mu_[:,0]).reshape(-1,1)
-        cVar=np.dot(np.dot(w_.T,cov_),w_)[0,0]
-        cMu=np.dot(w_.T,mu_)[0,0]
-        return cVar, cMu
-#------------------------------------------------------------------------------
-def getClusterCorr(cov, cItems0, cItems1, use_extended_terms=False, returns=None):
-    # Compute covariance of clusters
-    cov_0, cov_1, cov_01 = cov.loc[cItems0,cItems0], cov.loc[cItems1,cItems1], cov.loc[cItems0,cItems1] # matrix slice
-    if returns is None:
-        w_0=getIVPNew(cov_0, use_extended_terms=use_extended_terms, a=None).reshape(-1,1)
-        w_1=getIVPNew(cov_1, use_extended_terms=use_extended_terms, a=None).reshape(-1,1)
-    else:
-        mu_0, mu_1 = returns[cItems0].values, returns[cItems1].values
-        w_0=getIVPNew(cov_0, use_extended_terms=use_extended_terms, a=mu_0).reshape(-1,1)
-        w_1=getIVPNew(cov_1, use_extended_terms=use_extended_terms, a=mu_1).reshape(-1,1)
-    cCov =np.dot(np.dot(w_0.T,cov_01),w_1)[0,0]
-    cVar0=np.dot(np.dot(w_0.T,cov_0),w_0)[0,0]
-    cVar1=np.dot(np.dot(w_1.T,cov_1),w_1)[0,0]
-    cRho=cCov / np.sqrt(cVar0 * cVar1)
-    return cRho
-#------------------------------------------------------------------------------
-def getRecBipartNew(cov, sortIx, use_extended_terms1=False, use_extended_terms2=False, returns=None):
-    # Compute HRP alloc
-    w=pd.Series(1,index=sortIx)
-    cItems=[sortIx] # initialize all items in one cluster
-    while len(cItems)>0:
-        cItems=[i[j:k] for i in cItems for j,k in ((0,len(i)/2), \
-            (len(i)/2,len(i))) if len(i)>1] # bi-section
-        for i in xrange(0,len(cItems),2): # parse in pairs
-            cItems0=cItems[i] # cluster 1
-            cItems1=cItems[i+1] # cluster 2
-            cVar0,weight0=getClusterStats(cov, cItems0, use_extended_terms=use_extended_terms2, returns=returns)
-            cVar1,weight1=getClusterStats(cov, cItems1, use_extended_terms=use_extended_terms2, returns=returns)
-            term0, term1 = weight0 / cVar0, weight1 / cVar1
-            if use_extended_terms1:
-                rho=getClusterCorr(cov, cItems0, cItems1, use_extended_terms=use_extended_terms2, returns=returns)
-                sigma0, sigma1 = np.sqrt(cVar0), np.sqrt(cVar1)
-                M=rho*(weight0/sigma0 + weight1/sigma1) / (1. + rho)
-                term0 -= M / sigma0
-                term1 -= M / sigma1
-            alpha=term0/(term0 + term1)
-            w[cItems0]*=alpha # weight 1
-            w[cItems1]*=1-alpha # weight 2
-    return w
 #------------------------------------------------------------------------------
 # Build Class struct to hold B-Tree Structure, so structure can be re-used for different vectors
 class Cov_Tree:
