@@ -12,6 +12,8 @@
     \newpage}
 
 \urldef\HHIURL\url{https://en.wikipedia.org/wiki/Herfindahl%E2%80%93Hirschman_index#Effective_assets_in_a_portfolio}
+\urldef\CORRURL\url{https://stats.stackexchange.com/questions/226380/derivation-of-the-standard-error-for-pearsons-correlation-coefficient}
+
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -211,6 +213,18 @@ For example, each column $i$ of $\Sigma^{-1}A$ equals $\Sigma^{-1}A_i$, where $A
 Similarly, each row $i$ of $B\Sigma^{-1}$ equals $B_i^T\Sigma^{-1}$, where $B_i$ is the $i$th row of $B$.
 This is true due to the symmetrical nature of $\Sigma$. 
 However, more consideration is necessary for deciding the appropriate $\lambda$ in such scenarios.
+
+\section{Mathematical Commentary}\label{sec-MatheComment}
+Let $r$ denote the sampled correlation between two stocks, while $\rho$ denotes the true correlation. 
+It is known that the sampling standard deviation $\sqrt{\operatorname{Var}(r)}= \frac{ 1 - \rho^2}{\sqrt{n (1+\rho^2) }}$,\footnote{See \CORRURL} 
+and thus the error bars on the sampled correlation are smaller when $r$ is “high”, or near $\pm 1$, 
+while the error bars are larger when $r$ is “low”, or near 0. 
+RCRP by design treats stocks that are “near” each other, where $r$ is high, 
+more accurately by solving the optimal portfolio accurately near the leaves of the b-tree. 
+Stocks that are “far” from each other, where $r$ is lower,  
+evaluate their weights at the more aggregate scale with portfolios of portfolios and the correlations are averaged across portfolios. 
+By this interpretation, RCRP respects \''local" relationships, where the error bars are smaller between stocks, more than those that are further apart and thus have larger error bars. 
+This may help in more accurately representing true relationships in the optimal portfolios.
 
 
 \section{Numerical Examples}\label{sec-Simulation}
