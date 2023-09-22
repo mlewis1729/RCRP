@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=pdflatex 2018.4.16)  21 SEP 2023 21:39
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=pdflatex 2018.4.16)  22 SEP 2023 10:58
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -363,39 +363,104 @@ mr/m/n/10 )^^F[]) [] \OMS/cmsy/m/n/10 ^^U \OT1/cmr/m/n/10 0 \OMS/cmsy/m/n/10 )
 10 ;
  []
 
-[17] [18] [19] (./RCRP_Paper.aux) ) 
+[17] [18]
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 514--515
+[][][][][][][][]  
+ []
+
+
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 516--517
+[][][][][][][][]  
+ []
+
+
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 527--528
+[][][][][][][][]  
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [19]
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 552--553
+[][][][][][][][]  
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [20]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [21]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [22]
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 597--598
+[][][][][][][][]  
+ []
+
+
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 603--604
+[][][][][][][][]  
+ []
+
+
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 608--609
+[][][][][][][][]  
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [23]
+Overfull \hbox (28.27066pt too wide) in paragraph at lines 640--641
+[][][][][][][][]  
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [24]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [25]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [26]
+[27] [28] (./RCRP_Paper.aux) ) 
 Here is how much of TeX's memory you used:
- 3952 strings out of 492649
- 54193 string characters out of 6129622
- 139294 words of memory out of 5000000
- 7763 multiletter control sequences out of 15000+600000
- 11532 words of font info for 46 fonts, out of 8000000 for 9000
+ 4451 strings out of 492649
+ 58609 string characters out of 6129622
+ 180294 words of memory out of 5000000
+ 8260 multiletter control sequences out of 15000+600000
+ 11998 words of font info for 48 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,9n,40p,763b,266s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2018/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2018/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2018/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1
-/public/amsfonts/cmextra/cmex7.pfb></usr/local/texlive/2018/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2018/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1
-/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/p
-ublic/amsfonts/cm/cmr10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmr12.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/publi
-c/amsfonts/cm/cmr17.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmr5.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr6.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmr7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr8.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/
-cmsy10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/c
-msy5.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cms
-y7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt1
-0.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.
-pfb>
-Output written on RCRP_Paper.pdf (20 pages, 1013090 bytes).
+ 41i,9n,40p,763b,1660s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2018/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmex10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/publ
+ic/amsfonts/cmextra/cmex7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmr10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmr12.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmr17.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr5.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmr6.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr7.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r8.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy1
+0.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.
+pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pf
+b></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb
+></usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb><
+/usr/local/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb>
+Output written on RCRP_Paper.pdf (29 pages, 1040159 bytes).
 PDF statistics:
- 154 PDF objects out of 1000 (max. 8388607)
- 104 compressed objects within 2 object streams
+ 186 PDF objects out of 1000 (max. 8388607)
+ 126 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  31 words of extra memory for PDF output out of 10000 (max. 10000000)
 
