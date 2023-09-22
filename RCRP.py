@@ -178,14 +178,18 @@ class Cov_Tree:
     
     def solve( self, b, use_extended_terms = True, limit_shorts = False ):
         # solve C x = b
+        # b = None => min variance portfolio, otherwise b = Expected returns
         
         def recursive_solve( idx ):
             cluster_type = self.cluster_type_map[ idx ]
             lbls         = self.cluster_family_map[ idx ]
             if cluster_type == 'LEAF':
                 sub_cov = self.cov.loc[ lbls, lbls ]
-                sub_b   = b.loc[ lbls ]
-                w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=sub_b.values)
+                if b is None:
+                    w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
+                else:
+                    sub_b   = b.loc[ lbls ]
+                    w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=sub_b.values)
                 w = pd.Series( w, index = lbls )
                 return w
             else:
@@ -198,11 +202,14 @@ class Cov_Tree:
                 w = pd.concat( w )
                 # compress the covariance matrix (and vector b) using the optimal weights from lower levels
                 cov1 = self.cov.loc[ w.index, w.index ]
-                b1 = b.loc[ w.index ]
+                b1 = None if b is None else b.loc[ w.index ]
                 cov_compressed, b_compressed = compressCov( cov1, b1, clustering, w )
 
                 # evaluate the inverse variance portfolio on the clustered porfolio
-                w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b_compressed.values)
+                if b is None:
+                    w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=None)
+                else:
+                    w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b_compressed.values)
                 w_clusters = pd.Series( w_clusters, index = cov_compressed.index )
                 # update the weights using the optimal cluster weights
                 for clusterId in clustering.keys():
