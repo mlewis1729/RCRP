@@ -185,7 +185,7 @@ class Cov_Tree:
             if cluster_type == 'LEAF':
                 sub_cov = self.cov.loc[ lbls, lbls ]
                 sub_b   = b.loc[ lbls ]
-                w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=sub_b.values)
+                w = getIVPNew( sub_cov, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=sub_b.values)
                 w = pd.Series( w, index = lbls )
                 return w
             else:
@@ -202,7 +202,7 @@ class Cov_Tree:
                 cov_compressed, b_compressed = compressCov( cov1, b1, clustering, w )
 
                 # evaluate the inverse variance portfolio on the clustered porfolio
-                w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, a=b_compressed.values)
+                w_clusters = getIVPNew(cov_compressed, use_extended_terms=use_extended_terms, limit_shorts=limit_shorts, b=b_compressed.values)
                 w_clusters = pd.Series( w_clusters, index = cov_compressed.index )
                 # update the weights using the optimal cluster weights
                 for clusterId in clustering.keys():
