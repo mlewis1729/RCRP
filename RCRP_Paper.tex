@@ -4,6 +4,7 @@
 \usepackage{graphicx}          % Enable for eps,jpeg figures
 
 \usepackage{afterpage}
+\usepackage{float}
 
 \newcommand\blankpage{%
     \null
@@ -261,7 +262,7 @@ while RCRP is effectively using $\frac{2 \cdot 60}{\ln 2} \approx 174$ data poin
 \end{figure}
 
 \noindent
-\begin{figure}[!h]
+\begin{figure}[H]
 \includegraphics[width = 1.00\textwidth]{image2.jpg}
 \vspace{-1.75\baselineskip}
 \caption{Normalized EW moving standard deviation of daily returns of strategies, HL=20}
@@ -274,35 +275,42 @@ while HRP comes in second with a slightly lower effective position size ($\sim 2
 The shrinkage matrix techniques come in the middle of the pack (LW $\sim 130$, OAS $\sim 60$) 
 while RCRP with extended terms comes in the most concentrated at $\sim 20$ positions. 
 RCRP without the extended terms shows up in between the shrinkage matrix techniques with roughly 75 positions on average.
+
 %Chart 3: Effective Number of Positions
 \noindent
 \begin{figure}[!h]
-\includegraphics[width = 1.00\textwidth]{image3.jpg}
+\includegraphics[width = 1.0\textwidth]{image3.jpg}
 \vspace{-1.75\baselineskip}
 \caption{Effective Number of Positions}
 \label{fig3}
 \end{figure}
+
 An alternative metric for analyzing portfolio concentration is the maximum absolute weight at any given time. 
 This is shown in Figure \ref{fig4}. 
 As with Figure \ref{fig3}, we observe RCRP with extended terms is the most concentrated, 
 with the largest position typically around 14\%, while RCRP without the extended terms is typically half that ($\sim7$\%). 
 HRP comes in third at roughly 3.2\%, while LW, OAS, and IVP hold positions no larger than 1-2\% on average.
-%Chart 4: Max Absolute Weight
-\noindent
-\begin{figure}[!h]
-\includegraphics[width = 1.00\textwidth]{image4.jpg}
-\vspace{-1.75\baselineskip}
-\caption{Max Absolute Weight}
-\label{fig4}
-\end{figure}
+
+
+
 For completeness, we also include a chart with total number of positions, 
 which is to say number of positions where weights are non-zero. 
 This is shown in Figure \ref{fig5}. 
 For this analysis, we are typically considering 1000-1600 companies.
-%Chart 5: Total Number of Positions
+
+%Chart 4: Max Absolute Weight
 \noindent
-\begin{figure}[!h]
-\includegraphics[width = 1.00\textwidth]{image5.jpg}
+\begin{figure}[H]
+\includegraphics[width = 1.0\textwidth]{image4.jpg} 
+\vspace{-1.75\baselineskip}
+\caption{Max Absolute Weight}
+\label{fig4}
+\end{figure}
+
+%Chart 5: Total Number of Positions 
+\noindent 
+\begin{figure}[H]
+\includegraphics[width = 1.0\textwidth]{image5.jpg}
 \vspace{-1.75\baselineskip}
 \caption{Total Number of Positions}
 \label{fig5}
@@ -310,11 +318,6 @@ For this analysis, we are typically considering 1000-1600 companies.
 
 
 \section{Extended Commentary}\label{sec-Commentary}
-\subsection{Incorporating Limits On Short Positions}\label{sec-LimitShorts}
-The above analysis and procedure focused on the scenario where there are no shorting limits.
-In the case of shorting limits, the above process is easily altered to incorporate this modification; we need only modify step (5b).
-See Appendix \ref{sec-Appendix2} for proof of the necessary procedure modification.
-
 \subsection{Mathematical Justification For Design of RCRP}\label{sec-MatheComment}
 Let $r$ denote the sampled correlation between two stocks, while $\rho$ denotes the true correlation.
 It is known that the sampling standard deviation $\sqrt{\operatorname{Var}(r)}= \frac{ 1 - \rho^2}{\sqrt{n (1+\rho^2) }}$,\footnote{See \CORRURL}
@@ -335,7 +338,12 @@ Similarly, each row $i$ of $B\Sigma^{-1}$ equals $B_i^T\Sigma^{-1}$, where $B_i$
 This is true due to the symmetrical nature of $\Sigma$.
 However, more consideration is necessary for deciding the appropriate $\lambda$ in such scenarios.
 
-\section{Conclusions}\label{sec-Conclusions}
+\subsection{Incorporating Limits On Short Positions}\label{sec-LimitShorts}
+The above analysis and procedure focused on the scenario where there are no shorting limits.
+In the case of shorting limits, the above process is easily altered to incorporate this modification; we need only modify step (5b).
+See Appendix \ref{sec-Appendix2} for proof of the necessary procedure modification.
+
+\section{Conclusion}\label{sec-Conclusions}
 This new procedure RCRP is designed to perform optimal portfolio calculations without the need for the often numerically unstable procedure of inverting the covariance matrix. 
 RCRP builds on the original principles of HRP, while ensuring the original correlations of the companies are adhered to more thoroughly by designing a b-tree of relationships between the companies. 
 
@@ -345,6 +353,8 @@ One notable concern is an increased concentration in the portfolio,
 a concern that is somewhat mitigated by not using the extended terms in the inverse approximating step, 
 but which comes at the cost of reduced performance. 
 Further testing would be necessary to better delineate this tradeoff.
+
+\clearpage
 
 \appendix
 \section{Optimal Max Sharpe Portfolios}\label{sec-Appendix1}
@@ -378,7 +388,7 @@ Note that this same argument extends to the case where short positions are limit
 in which case the condition $\sum_i |w_i| = 1$ holds. 
 Thus, the max sharpe portfolio with no shorting limits differs from the case with limits only by the normalization.
 
-\section{Optimal Min Variance Portfolios With Shorting Limits}\label{sec-Appendix2}
+\section{Optimal Portfolios With Shorting Limits}\label{sec-Appendix2}
 We now discuss the scenario where short positions on the portfolio are limited. 
 To do so, we exchange the condition $\sum_i w_i = 1$ with $\sum_i |w_i| = 1$.
 Section \ref{sec-Appendix1} makes clear the max sharpe ratio portfolio with shorting limits differs only in normalization from the case without limits. 
