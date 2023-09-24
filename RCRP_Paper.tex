@@ -124,8 +124,7 @@ Given this is a rank-one update to the matrix $(1 - \rho) \Sigma_{diag}$, we can
 \begin{equation*}
 \Sigma^{-1} = \frac{1}{1 - \rho} \Sigma_{diag}^{-1} - \frac{ \rho }{ (1-\rho) (1 + \rho (N-1) ) } \left( \frac{1}{\sigma} \right) \left( \frac{1}{\sigma} \right)^T
 \end{equation*}
-In this equation $\left( \frac{1}{\sigma} \right)$ is, with slight abuse of notation, 
-the vector with component $i$ set to $\frac{1}{\sigma_i}$. 
+
 For a covariance matrix with this form, the optimal minimum variance portfolio takes the form
 \begin{equation*}
 w_i \propto \frac{1}{\sigma_i^2} - \frac{ \rho \sum_j \frac{1}{\sigma_j} }{ ( 1 + \rho (N-1) )\sigma_i  }
@@ -138,11 +137,11 @@ where $s_i = \frac{\mu_i}{\sigma_i}$ is the $i$th sharpe ratio, and $\bar{s}$ is
 This predictably reduces to the inverse variance portfolio in the case where $\rho=0$. 
 In practice, we can set $\rho = \bar{\rho}$, the average off-diagonal correlation, if we wish to approximate the covariance matrix this way.
 
-\section{Portfolio Enhancement Via Recursive Clustering}\label{sec-RCRP}
 While the above enhancement is a useful approximation in cases where the off-diagonal correlations are all similar, this isn’t the typical case.
-It is a useful result to keep in mind as we proceed.
+This is, however, a useful intermediate result, and the reader is advised to keep this in mind as we describe the general method in the next section.
 
-Let us first consider a portfolio of stocks that are exclusively in the Industrial or the Technology sector. 
+\section{Portfolio Enhancement Via Recursive Clustering}\label{sec-RCRP}
+Consider a portfolio of stocks that are exclusively in the Industrial or the Technology sector. 
 We expect Industrial stocks to have returns similar to other Industrial stocks, and likewise Technology stocks returns similar to other Technology stocks. 
 However, Industrial stock performance will be less similar to Technology stocks. 
 If we sort the indices to place the Industrials first followed by the Technology stocks, 
@@ -199,40 +198,11 @@ while companies that are less correlated are further apart.
 This is consistent with the original premise of HRP, but unlike HRP fully utilizing risk parity at all levels of the tree. 
 Furthermore, each non-leaf of the tree does contain 2 or more branches and does not assume equal-sized clusters, thus making it more generalized than the HRP procedure.
 
-
-\section{Incorporating Limits On Short Positions}\label{sec-LimitShorts}
-The above analysis and procedure focused on the scenario where there are no shorting limits. 
-In the case of shorting limits, the above process is easily altered to incorporate this modification; we need only modify step (5b).
-See Appendix \ref{sec-Appendix2} for proof of the necessary procedure modification.
-
-
-\section{Notable Alternative Use Cases}\label{sec-AltUseCase}
-The previous sections describe how RCRP evaluates $w \propto \Sigma^{-1}\mu$. This is, up to scaling $\lambda$, equivalent to solving $\lambda \Sigma w = \mu$. 
-This procedure could be easily modified for use in matrix multiplication by the inverse of the covariance matrix $\Sigma$. 
-For example, each column $i$ of $\Sigma^{-1}A$ equals $\Sigma^{-1}A_i$, where $A_i$ is the $i$th column of $A$. 
-Similarly, each row $i$ of $B\Sigma^{-1}$ equals $B_i^T\Sigma^{-1}$, where $B_i$ is the $i$th row of $B$.
-This is true due to the symmetrical nature of $\Sigma$. 
-However, more consideration is necessary for deciding the appropriate $\lambda$ in such scenarios.
-
-\section{Mathematical Commentary}\label{sec-MatheComment}
-Let $r$ denote the sampled correlation between two stocks, while $\rho$ denotes the true correlation. 
-It is known that the sampling standard deviation $\sqrt{\operatorname{Var}(r)}= \frac{ 1 - \rho^2}{\sqrt{n (1+\rho^2) }}$,\footnote{See \CORRURL} 
-and thus the error bars on the sampled correlation are smaller when $r$ is “high”, or near $\pm 1$, 
-while the error bars are larger when $r$ is “low”, or near 0. 
-RCRP by design treats stocks that are “near” each other, where $r$ is high, 
-more accurately by solving the optimal portfolio accurately near the leaves of the b-tree. 
-Stocks that are “far” from each other, where $r$ is lower,  
-evaluate their weights at the more aggregate scale with portfolios of portfolios and the correlations are averaged across portfolios. 
-By this interpretation, RCRP respects \''local" relationships, where the error bars are smaller between stocks, more than those that are further apart and thus have larger error bars. 
-This may help in more accurately representing true relationships in the optimal portfolios.
-
-
 \section{Numerical Examples}\label{sec-Simulation}
 We now review the financial performance of RCRP. 
-For this section, we consider an assortment of industry standard techniques for creating portfolio weights for the minimum variance portfolio, 
+For this section, we consider an assortment of industry standard techniques for creating portfolio weights for the minimum variance portfolio in the no shorting limits case, i.e. where $1^Tw=1$, 
 and compare the performance of the resulting portfolios from these techniques. 
-This analysis focuses on the case with no shorting limits, i.e. where $1^Tw=1$.
-The code for this section, written in Python 3, can be found at: \url{https://github.com/mlewis1729}. 
+The code for this section, written in Python 3, can be found at: \url{https://github.com/mlewis1729}, as well as in Appendix \ref{sec-AppendixCode}.
 For transparency, there are two modifications made in the code from the source material:
 \begin{enumerate}
 \item HRP has been ported from Python 2 to Python 3 code using minor syntax modifications
@@ -337,6 +307,33 @@ For this analysis, we are typically considering 1000-1600 companies.
 \caption{Total Number of Positions}
 \label{fig5}
 \end{figure}
+
+
+\section{Extended Commentary}\label{sec-Commentary}
+\subsection{Incorporating Limits On Short Positions}\label{sec-LimitShorts}
+The above analysis and procedure focused on the scenario where there are no shorting limits.
+In the case of shorting limits, the above process is easily altered to incorporate this modification; we need only modify step (5b).
+See Appendix \ref{sec-Appendix2} for proof of the necessary procedure modification.
+
+\subsection{Mathematical Justification For Design of RCRP}\label{sec-MatheComment}
+Let $r$ denote the sampled correlation between two stocks, while $\rho$ denotes the true correlation.
+It is known that the sampling standard deviation $\sqrt{\operatorname{Var}(r)}= \frac{ 1 - \rho^2}{\sqrt{n (1+\rho^2) }}$,\footnote{See \CORRURL}
+and thus the error bars on the sampled correlation are smaller when $r$ is “high”, or near $\pm 1$,
+while the error bars are larger when $r$ is “low”, or near 0.
+RCRP by design treats stocks that are “near” each other, where $r$ is high,
+more accurately by solving the optimal portfolio accurately near the leaves of the b-tree.
+Stocks that are “far” from each other, where $r$ is lower,
+evaluate their weights at the more aggregate scale with portfolios of portfolios and the correlations are averaged across portfolios.
+By this interpretation, RCRP respects \''local" relationships, where the error bars are smaller between stocks, more than those that are further apart and thus have larger error bars.
+This may help in more accurately representing true relationships in the optimal portfolios.
+
+\subsection{Notable Alternative Use Cases}\label{sec-AltUseCase}
+Section \ref{sec-RCRP} describe how RCRP evaluates $w \propto \Sigma^{-1}\mu$. This is, up to scaling $\lambda$, equivalent to solving $\lambda \Sigma w = \mu$.
+This procedure could be easily modified for use in matrix multiplication by the inverse of the covariance matrix $\Sigma$.
+For example, each column $i$ of $\Sigma^{-1}A$ equals $\Sigma^{-1}A_i$, where $A_i$ is the $i$th column of $A$.
+Similarly, each row $i$ of $B\Sigma^{-1}$ equals $B_i^T\Sigma^{-1}$, where $B_i$ is the $i$th row of $B$.
+This is true due to the symmetrical nature of $\Sigma$.
+However, more consideration is necessary for deciding the appropriate $\lambda$ in such scenarios.
 
 \section{Conclusions}\label{sec-Conclusions}
 This new procedure RCRP is designed to perform optimal portfolio calculations without the need for the often numerically unstable procedure of inverting the covariance matrix. 
